@@ -1,3 +1,6 @@
+# Explicitly list target
+/ohno
+
 # Compiled Object files
 *.slo
 *.lo
