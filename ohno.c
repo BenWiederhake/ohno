@@ -41,6 +41,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ohno-hash.h"
+
 const char* const USAGE =
 "Usage:\n"
 "  %s <path/to/your/program>\n"
@@ -50,7 +52,7 @@ const char* const USAGE =
 "- The first 4 bytes are (in little endian) the length of the ohno bytecode\n"
 "- The rest of the file may be anything\n"
 "\n"
-"The ohno bytecode is computed by computing the SHA3-512 of the entire input\n"
+"The ohno bytecode is computed by computing the KECCAK-1600 of the entire input\n"
 "file, and essentially interpreting that hash as brainfuck instructions.\n"
 "\n"
 "For more information about how to write ohno code, please read\n"
@@ -59,11 +61,6 @@ const char* const USAGE =
 #ifndef OHNO_SIZE_T_MODIFIER
 #define OHNO_SIZE_T_MODIFIER "ld"
 #endif
-
-typedef struct chunk {
-    size_t len;
-    unsigned char* data;
-} chunk;
 
 chunk read_to_file(const char* filename) {
     chunk chk;
@@ -89,8 +86,8 @@ chunk read_to_file(const char* filename) {
         return chk;
     }
     chk.len = (size_t)raw_len;
-    if (chk.len < 8) {
-        perror("File is too short");
+    if (chk.len < 4) {
+        fprintf(stderr, "File is too short\n");
         fclose(fp);
         chk.len = 0;
         return chk;
@@ -126,10 +123,6 @@ chunk read_to_file(const char* filename) {
     return chk;
 }
 
-//int to_sha3(chunk chk_raw, chunk chk_sha3) {
-//
-//}
-
 //typedef struct bf_chunk {
 //    unsigned char content[4096 - 2 * sizeof(void*)];
 //    bf_chunk* left;
@@ -152,32 +145,33 @@ int main(const int argc, const char **argv) {
         return 1;
     }
 
-    /* Compute sha3 */
+    /* Compute hash */
     typedef char check_uint_size[(sizeof(unsigned int) >= 4) ? 1 : -1];
     assert(sizeof(check_uint_size) > 0);
-    chunk sha3;
-    sha3.len = le64toh(*(unsigned int* )content.data);
-    fprintf(stderr, "That'll be %" OHNO_SIZE_T_MODIFIER " bytes of brainfuck.\n", sha3.len);
-    sha3.data = malloc(sha3.len);
-    if (!sha3.data) {
+    chunk hash;
+    hash.len = le64toh(*(unsigned int* )content.data);
+    fprintf(stderr, "That'll be %" OHNO_SIZE_T_MODIFIER " bytes of brainfuck.\n", hash.len);
+    hash.data = malloc(hash.len);
+    if (!hash.data) {
         fprintf(stderr, "Couldn't allocate that much.\n");
         free(content.data);
         return 1;
     }
 
+    if (!to_hash(content, hash)) {
+        fprintf(stderr, "Couldn't compute SHA3 ... huh?\n");
+        free(content.data);
+        free(hash.data);
+        return 1;
+    }
+
     fprintf(stderr, "So far, so good.\n");
     return 0;
-//    if (!to_sha3(content, sha3)) {
-//        fprintf(stderr, "Couldn't compute SHA3 ... huh?\n");
-//        free(content.data);
-//        free(sha3.data);
-//        return 1;
-//    }
-//
+
 //    bf_chunk tape;
 //    memset(tape.content, 0, sizeof(tape.content));
 //    tape.left = NULL;
 //    tape.right = NULL;
 //
-//    return run_bf(sha3, &tape);
+//    return run_bf(hash, &tape);
 }

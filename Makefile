@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+OHNO_OBJECTS   := ohno-hash.o ohno.o
+ALL_OBJECTS    := ${OHNO_OBJECTS}
+
 all = bin
 
 .PHONY: bin
@@ -29,5 +32,8 @@ libkeccak/Makefile:
 libkeccak/bin/libkeccak.a: libkeccak/Makefile
 	+make -C libkeccak
 
-ohno: ohno.c libkeccak/bin/libkeccak.a
-	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -o $@ $<
+${ALL_OBJECTS}: %.o: %.c | libkeccak/Makefile
+	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -c -o $@ $<
+
+ohno: ${OHNO_OBJECTS} libkeccak/bin/libkeccak.a
+	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -o $@ $^
