@@ -34,13 +34,14 @@
 
 #include <assert.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifndef __USE_MISC
 #define __USE_MISC
 #endif
 #include <endian.h>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "ohno-hash.h"
 
@@ -124,15 +125,137 @@ chunk read_to_file(const char* filename) {
     return chk;
 }
 
-//typedef struct bf_chunk {
-//    unsigned char content[4096 - 2 * sizeof(void*)];
-//    bf_chunk* left;
-//    bf_chunk* right;
-//} bf_chunk;
+typedef struct bf_chunk {
+    unsigned char content[4096 - 2 * sizeof(void*)];
+    struct bf_chunk* left;
+    struct bf_chunk* right;
+} bf_chunk;
 
-//int run_bf(chunk* code, bf_chunk* tape) {
-//
-//}
+void init_bf_chunk(bf_chunk* tape) {
+    assert(sizeof(tape->content) == 4080); /* Sanity check for my machine */
+    memset(tape->content, 0, sizeof(tape->content));
+    tape->left = NULL;
+    tape->right = NULL;
+}
+
+unsigned char read_instr(chunk* code, int pc_nibble) {
+    if (pc_nibble < 0) {
+        double x = 5;
+        /* Crash */
+        while (1) {
+            x = x*x - 20;
+        }
+    }
+    assert(pc_nibble >= 0);
+    assert((size_t)(pc_nibble / 2) < code->len);
+    unsigned char instr = code->data[pc_nibble / 2];
+    if (!(pc_nibble % 2)) {
+        instr >>= 4;
+    }
+    return instr & 0x07;
+}
+
+int run_bf(chunk* code, bf_chunk* tape) {
+    int tape_byte = sizeof(tape->content) / 2;
+    int pc_nibble = 0;
+    while ((size_t)(pc_nibble / 2) < code->len) {
+        /* Read instruction */
+        const unsigned char instr = read_instr(code, pc_nibble);
+        /* Execute instruction */
+        switch (instr) {
+        case 0:
+            /* '+' */
+            ++tape->content[tape_byte];
+            break;
+        case 1:
+            /* '-' */
+            --tape->content[tape_byte];
+            break;
+        case 2:
+            /* '[' */
+            break;
+        case 3:
+            /* ']' */
+            if (tape->content[tape_byte]) {
+                /* Scan backwards to corresponding opening bracket */
+                size_t need_opens = 1;
+                do {
+                    --pc_nibble;
+                    switch (read_instr(code, pc_nibble)) {
+                    case 2:
+                        --need_opens;
+                        break;
+                    case 3:
+                        ++need_opens;
+                        break;
+                    default:
+                        /* Ignore */
+                        break;
+                    }
+                } while (need_opens > 0);
+            }
+            break;
+        case 4:
+            /* '>' */
+            ++tape_byte;
+            if ((size_t)tape_byte >= sizeof(tape->content)) {
+                assert(tape_byte == sizeof(tape->content));
+                tape_byte -= sizeof(tape->content);
+                if (!tape->right) {
+                    tape->right = (bf_chunk*) malloc(sizeof(bf_chunk));
+                    if (!tape->right) {
+                        free(tape); /* Hopefully enough to construct the string */
+                        fprintf(stderr, "Out of memory :(\n");
+                        return 1;
+                    }
+                    init_bf_chunk(tape->right);
+                    tape->right->left = tape;
+                }
+                tape = tape->right;
+            }
+            break;
+        case 5:
+            /* '<' */
+            --tape_byte;
+            if (tape_byte < 0) {
+                assert(tape_byte == -1);
+                tape_byte += sizeof(tape->content);
+                if (!tape->left) {
+                    tape->left = (bf_chunk*) malloc(sizeof(bf_chunk));
+                    if (!tape->left) {
+                        free(tape); /* Hopefully enough to construct the string */
+                        fprintf(stderr, "Out of memory :(\n");
+                        return 1;
+                    }
+                    init_bf_chunk(tape->left);
+                    tape->left->right = tape;
+                }
+                tape = tape->left;
+            }
+            break;
+        case 6:
+            /* ','
+             * Specifically, this implements the "no change" variant for highest
+             * imagined portability. */
+        {
+            int it = getchar();
+            if (it == EOF) {
+                /* Whatever, call it the end of input, even if that actually
+                 * was an error. */
+                return 0;
+            }
+            tape->content[tape_byte] = (unsigned char)it;
+            break;
+        }
+        case 7:
+            /* '.' */
+            putchar(tape->content[tape_byte]);
+            break;
+        }
+        ++pc_nibble;
+    }
+    return 0;
+}
 
 int main(const int argc, const char **argv) {
     if (argc != 2) {
@@ -159,24 +282,22 @@ int main(const int argc, const char **argv) {
     hash.data = malloc(hash.len);
     if (!hash.data) {
         fprintf(stderr, "Couldn't allocate that much.\n");
-        free(content.data);
         return 1;
     }
 
     if (!to_hash(content, hash)) {
         fprintf(stderr, "Couldn't compute SHA3 ... huh?\n");
-        free(content.data);
-        free(hash.data);
         return 1;
     }
 
-    fprintf(stderr, "So far, so good.\n");
-    return 0;
+    fprintf(stderr, "Bytecode is: ");
+    for (size_t i = 0; i < hash.len; ++i) {
+        fprintf(stderr, "%02x", (unsigned char)hash.data[i]);
+    }
+    fprintf(stderr, "\nStart\n");
 
-//    bf_chunk tape;
-//    memset(tape.content, 0, sizeof(tape.content));
-//    tape.left = NULL;
-//    tape.right = NULL;
-//
-//    return run_bf(hash, &tape);
+    bf_chunk tape;
+    init_bf_chunk(&tape);
+
+    return run_bf(&hash, &tape);
 }
