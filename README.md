@@ -29,7 +29,9 @@ ohno programs.  The `cat` example was found using these tools.
 ## Seriously. What?!
 
 Of course all of this isn't to be taken too seriously.  Obviously ohno
-isn't *truly* compiled, as it uses an interpreter.
+isn't *truly* compiled, as it uses an interpreter.  But it could be.
+Shoot me a PR that compiles ohno into actual assembly, probably using
+LLVM? :D
 
 Ohno is intended to rival Belunge in difficulty, as now the "hashing"
 isn't some home-made algorithm that may or may not have nice
@@ -127,8 +129,14 @@ fast.  Future versions of ohno thus should incorporate some hash
 function that is more time-intensive.  `bcrypt` might be the way to go.
 Yes, this item is in direct contradiction to the previous point.
 
+As already mentioned, this is just an interpreter, but a true compiler
+should be easily possible.  This could seriously improve the execution
+time for the "jump back" instruction!
+
 Are there other interesting ohno programs you can find?  Something that
 does something even *slightly* advanced?  Maybe Caesar encoding with
 wraparound?
 
 Shoot me a Pull Request! :D
+
+(Or *just* shoot me!  Aargh, the pain from writing this!  Oh god!  Help!)
