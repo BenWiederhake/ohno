@@ -1,5 +1,6 @@
 /*
- ohno - Interpreter for the impossibly difficult language "ohno"
+ ohno - Interpreter for "ohno", which does not stand for
+        "overly hard, nonsensical language"
  Copyright 2016 Ben Wiederhake
 
  This program is free software: you can redistribute it and/or modify
