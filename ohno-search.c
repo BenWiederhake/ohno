@@ -29,7 +29,7 @@
 
 #include "ohno-hash.h"
 
-#define OUTPUT_BYTES 3
+#define OUTPUT_BYTES (8/2)
 #define INPUT_EXTRA_BYTES 3
 
 int main() {

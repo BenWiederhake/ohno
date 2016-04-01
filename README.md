@@ -113,11 +113,45 @@ problem](https://en.wikipedia.org/wiki/Halting_problem).  Not only
 that, you'd solve it with merely a [Finite State
 Machine](https://en.wikipedia.org/wiki/Regular_expression#Expressive_power_and_compactness)!)
 
-So, after all, `cat.ohno` was computed like this:
+So, after all, `cat.ohno` was computed like this, where `ohno-search.c`
+says `#define OUTPUT_BYTES (6/2)` (because we want 6 instructions, each
+taking up half of a byte):
 ```
 ./search | grep '^[2a][6e][7f][45cd][0189][3b] '
 ```
 As you can see for yourself, there's lots of matches.
+
+Let's measure throughput:
+```
+cat /dev/zero | pv -bartT | ./ohno example/cat/cat.ohno
+```
+Wow! This implementation reaches roughly 1 MiB/s on my machine, which is
+incredibly fast for being so shitty.
+
+
+## `spacecat.ohno`
+
+The previous cat implementation uses a new cell for each character, which is bad™.
+
+Changing `OUTPUT_BYTES` to `(8/2)` in `ohno-search.c` and recompiling
+let's us do this:
+```
+./search | grep '^[2a][6e][7f][2a][0189][3b][0189][3b] '
+```
+
+Which finds the included space-efficient cat implementation in a
+reasonable time.  Note that I fixed 22 bits, so this should take (on
+average) 2 million guesses until something is found.  In fact, the
+first such program is found on attempt 1779300.  It seems that
+`./search` is pleasently fast for being written so carelessly.
+
+```
+cat /dev/zero | pv -bartT | ./ohno example/spacecat/spacecat.ohno
+```
+It seems that this program only achieves 241KiB/s, which is probably
+due to having to `rewind` each character.  As I'm using `/dev/zero`
+here, which *always* hits the worst-case, it may be a bit faster on
+real-life data.
 
 
 ## TODO
