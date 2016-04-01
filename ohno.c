@@ -146,10 +146,14 @@ int main(const int argc, const char **argv) {
     }
 
     /* Compute hash */
-    typedef char check_uint_size[(sizeof(unsigned int) >= 4) ? 1 : -1];
+    typedef char check_uint_size[(sizeof(unsigned int) == 4) ? 1 : -1];
     assert(sizeof(check_uint_size) > 0);
     chunk hash;
-    hash.len = le64toh(*(unsigned int* )content.data);
+    hash.len = 0;
+    hash.len |= ((unsigned char)content.data[0]) << (8 * 3);
+    hash.len |= ((unsigned char)content.data[1]) << (8 * 2);
+    hash.len |= ((unsigned char)content.data[2]) << (8 * 1);
+    hash.len |= ((unsigned char)content.data[3]) << (8 * 0);
     fprintf(stderr, "That'll be %" OHNO_SIZE_T_MODIFIER " bytes of brainfuck.\n", hash.len);
     hash.data = malloc(hash.len);
     if (!hash.data) {

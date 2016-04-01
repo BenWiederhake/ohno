@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-OHNO_OBJECTS   := ohno-hash.o ohno.o
-ALL_OBJECTS    := ${OHNO_OBJECTS}
+HASH_OBJECTS   := ohno-hash.o
+OHNO_OBJECTS   := ohno.o
+SEARCH_OBJECTS := ohno-search.o
+ALL_OBJECTS    := ${HASH_OBJECTS} ${OHNO_OBJECTS} ${SEARCH_OBJECTS}
 
 all = bin
 
 .PHONY: bin
-bin: ohno
+bin: ohno search
 
 libkeccak/Makefile:
 	@echo "You didn't use '--recursive' when cloning, did you?"
@@ -35,5 +37,8 @@ libkeccak/bin/libkeccak.a: libkeccak/Makefile
 ${ALL_OBJECTS}: %.o: %.c | libkeccak/Makefile
 	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -c -o $@ $<
 
-ohno: ${OHNO_OBJECTS} libkeccak/bin/libkeccak.a
+ohno: ${HASH_OBJECTS} ${OHNO_OBJECTS} libkeccak/bin/libkeccak.a
+	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -o $@ $^
+
+search: ${HASH_OBJECTS} ${SEARCH_OBJECTS} libkeccak/bin/libkeccak.a
 	gcc -Wall -Wextra -pedantic -Werror -g -O2 -std=c99 -o $@ $^

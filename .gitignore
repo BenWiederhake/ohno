@@ -1,5 +1,6 @@
-# Explicitly list target
+# Explicitly list targets
 /ohno
+/search
 
 # Compiled Object files
 *.slo
