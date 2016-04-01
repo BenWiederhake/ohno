@@ -23,7 +23,7 @@
  Run like this:
    ./ohno <path/to/your/program>
 
- As it is impossibly hard to write a meaningful program in ohno,
+ As it is overly hard to write a meaningful program in ohno,
  I'm not sure whether there are any bugs.
 
  For an explanation how this (should) work, see README.md
@@ -54,8 +54,8 @@ const char* const USAGE =
 "- The first 4 bytes are (in big endian) the length of the ohno bytecode\n"
 "- The rest of the file may be anything\n"
 "\n"
-"The ohno bytecode is computed by computing the KECCAK-1600 of the entire input\n"
-"file, and essentially interpreting that hash as brainfuck instructions.\n"
+"The ohno bytecode is computed by computing a Keccak variant of the entire input\n"
+"file, and essentially interpreting that hash as Brainfuck instructions.\n"
 "\n"
 "For more information about how to write ohno code, please read\n"
 "the documentation.\n";
@@ -172,10 +172,10 @@ int run_bf(chunk* code, bf_chunk* tape) {
             --tape->content[tape_byte];
             break;
         case 2:
-            /* '[' */
+            /* '{' */
             break;
         case 3:
-            /* ']' */
+            /* '}' */
             if (tape->content[tape_byte]) {
                 /* Scan backwards to corresponding opening bracket */
                 size_t need_opens = 1;
