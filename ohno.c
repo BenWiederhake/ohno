@@ -51,7 +51,7 @@ const char* const USAGE =
 "\n"
 "Your program should be written ohno, that is:\n"
 "- At least 4 bytes long\n"
-"- The first 4 bytes are (in little endian) the length of the ohno bytecode\n"
+"- The first 4 bytes are (in big endian) the length of the ohno bytecode\n"
 "- The rest of the file may be anything\n"
 "\n"
 "The ohno bytecode is computed by computing the KECCAK-1600 of the entire input\n"
