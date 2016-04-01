@@ -35,13 +35,7 @@
 #include <assert.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#ifndef __USE_MISC
-#define __USE_MISC
-#endif
-#include <endian.h>
 
 #include "ohno-hash.h"
 
