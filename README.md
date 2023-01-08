@@ -1,5 +1,7 @@
 # ohno - Interpreter for "ohno"
 
+"ohno" is an esoteric "programming language" designed to be cryptographically difficult.
+
 "ohno" does not stand for "overly hard, nonsensical language"
 
 
